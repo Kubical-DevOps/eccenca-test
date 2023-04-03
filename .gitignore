@@ -1,0 +1,5 @@
+*.lock
+*.sql
+*.tgz
+*-dec.yaml
+key*

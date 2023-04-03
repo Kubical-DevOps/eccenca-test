@@ -1,0 +1,1 @@
+#### We will not be using the traditionnal nginx ingress controller as it not fitted for minikube local installation purposes

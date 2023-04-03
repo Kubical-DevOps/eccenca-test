@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frontend
+  namespace: argocd
+spec:
+  project: frontend
+  source:
+    repoURL: 'https://github.com/Kubical-DevOps/eccenca-test.git'
+    path: helm-charts/frontend
+    targetRevision: development
+    helm:
+      valueFiles:
+        - values-development.yaml
+      version: v3
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: frontend
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true

@@ -1,0 +1,36 @@
+version: '3.1'
+
+services:
+  frontend:
+    container_name: fyl_frontend
+    image: ${FRONTEND_IMAGE}
+    restart: unless-stopped
+    tty: true
+    ports:
+    - 127.0.0.1:3000:3000
+    environment:
+      REACT_APP_BACKEND_API_BASE_URL: http://127.0.0.1:8000
+
+  backend:
+    container_name: fyl_backend
+    image: ${BACKEND_IMAGE}
+    restart: always
+    ports:
+    - 127.0.0.1:8000:8000
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-application}:${DB_PASSWORD:-application}@database:5432/${DB_DATABASE:-application}
+
+  database:
+    container_name: fyl_database
+    image: postgres:${POSTGRES_VERSION:-latest}
+    restart: unless-stopped
+    volumes:
+    - "dbdata:${DB_DATA_DIR}"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-application}
+      POSTGRES_USER: ${DB_USER:-application}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-application}
+
+volumes:
+  dbdata:
+

@@ -1,0 +1,111 @@
+## ArgoCD configuration
+## Ref: https://github.com/argoproj/argo-cd
+##
+## Global
+global:
+  # different repo for integration of helm secrets plugin
+  image:
+    repository: evermind/argocd-helm-secrets
+    tag: "latest"
+    imagePullPolicy: Always
+## Repo Server
+repoServer:
+  ## Additional volumeMounts for gpg key import
+  service:
+    type: NodePort
+  volumeMounts: 
+  - name: gpg-secret
+    mountPath: /home/argocd/gpg
+  volumes: 
+  - name: gpg-secret
+    secret:
+      secretName: helm-secrets-private-keys 
+## Server
+server:
+  ## ArgoCD config
+  ## reference https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cm.yaml
+  additionalApplications: 
+  - name: argocd
+    namespace: argocd
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      helm:
+        version: v3
+        valueFiles:
+          - values.yaml
+          - values-development.yaml
+      path: helm-charts/argocd
+      repoURL: https://github.com/Kubical-DevOps/eccenca-test.git
+      targetRevision: development
+    syncPolicy:
+      automated:
+        prune: false
+        selfHeal: false
+#### App of Apps
+  - name: app-of-apps
+    namespace: argocd
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      path: argocd/apps
+      repoURL: https://github.com/Kubical-DevOps/eccenca-test.git
+      targetRevision: development
+      directory:
+        recurse: true
+        jsonnet: {}
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+#### App of projects
+  - name: app-of-projects
+    namespace: argocd
+    destination:
+      namespace: argocd
+      server: https://kubernetes.default.svc
+    project: argocd
+    source:
+      path: argocd/app-projects
+      repoURL: https://github.com/Kubical-DevOps/eccenca-test.git
+      targetRevision: development
+      directory:
+        recurse: true
+        jsonnet: {}
+    syncPolicy:
+      automated:
+        selfHeal: true
+        prune: true
+  additionalProjects:
+  - name: argocd
+    namespace: argocd
+    additionalLabels: {}
+    additionalAnnotations: {}
+    description: Master Argocd Project
+    sourceRepos:
+    - '*'
+    destinations:
+    - server: https://kubernetes.default.svc
+      namespace: argocd
+    clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  ingress:
+    enabled: true
+    className: ""
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - argocd.local
+    paths:
+      - /
+    tls: []
+configs:
+  repositories:
+    eccenca-test:
+      url: https://github.com/Kubical-DevOps/eccenca-test.git
